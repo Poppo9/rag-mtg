@@ -1,0 +1,1 @@
+This folder should contain all the PDFs to index, for now it has just the one official mtg manual: https://media.wizards.com/images/magic/tcg/resources/rules/MagicCompRules_21031101.pdf 
