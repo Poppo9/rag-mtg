@@ -10,12 +10,11 @@ https://scryfall.com/docs/api
 # Learning Topics
 - RAG logics implementation without using already developed libraries.
 - Lambda AWS. https://docs.aws.amazon.com/lambda/
-- Pinecone vector db + Llamaindex. https://developers.llamaindex.ai/python/framework-api-reference/storage/vector_store/pinecone/
+- CHROMADB vector db + Llamaindex.
 
 # Main Architecture Idea & Guidelines
 1. Account Setup and Credentials
 - [ ] Create an AWS account (requires a credit card)
-- [X] Create a Pinecone account (email, free tier)
 - [X] Create an OpenAI account and deploy a model to get API key.
 - [X] Store all API keys securely
 

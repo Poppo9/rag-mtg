@@ -8,6 +8,11 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 ipykernel = "^7.1.0"
+python-dotenv = "^1.2.1"
+llama-index-vector-stores-chroma = "^0.5.3"
+openai = "^2.8.1"
+llama-index = "^0.14.8"
+pypdf = "^6.4.0"
 
 
 [build-system]
