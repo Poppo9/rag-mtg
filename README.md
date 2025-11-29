@@ -59,3 +59,7 @@ run:
 
 pip install poetry
 poetry install
+
+
+# Notes
+At first, I considered indexing the entire card database, but that would require a recurring script to keep the index updated. I’ll still need to do something similar for the rules manual, though rule changes occur far less frequently than new card releases.
