@@ -66,3 +66,53 @@ def get_rulings (rulings_uri: str) -> dict:
     except requests.exceptions.RequestException as e:
         print(f"Error in API call: {e}")
         return None
+    
+
+def get_complete_card_info(card_name: str) -> str:
+    """
+    Retrieves complete card information including distilled card data and rulings.
+    
+    Args:
+        card_name: The name of the card to search for
+        
+    Returns:
+        A formatted string containing card info and rulings, or error message
+    """
+    # Find the exact card name
+    exact_name = find_exact_name(card_name)
+    if not exact_name:
+        return f"No card found matching '{card_name}'"
+    
+    # Get full card data
+    card_data = get_card_info(exact_name)
+    if not card_data:
+        return f"Error retrieving card data for '{exact_name}'"
+    
+    # Distill card info
+    distilled_info = distill_card_info(card_data)
+    
+    # Get rulings
+    rulings_uri = distilled_info.get("rulings_uri")
+    rulings_response = get_rulings(rulings_uri) if rulings_uri else None
+    
+    # Format output string
+    output = []
+    output.append(f"=== {distilled_info['name']} ===\n")
+    output.append(f"Mana Cost: {distilled_info.get('mana_cost', 'N/A')}")
+    output.append(f"Type: {distilled_info.get('type_line', 'N/A')}")
+    output.append(f"Colors: {', '.join(distilled_info.get('colors', [])) or 'Colorless'}")
+    output.append(f"Color Identity: {', '.join(distilled_info.get('color_identity', [])) or 'Colorless'}")
+    output.append(f"Rarity: {distilled_info.get('rarity', 'N/A').capitalize()}")
+    output.append(f"\nOracle Text:\n{distilled_info.get('oracle_text', 'N/A')}")
+    
+    # Add rulings if available
+    output.append("\n--- RULINGS ---")
+    if rulings_response and rulings_response.get("data"):
+        for i, ruling in enumerate(rulings_response["data"], 1):
+            output.append(f"\n{i}. [{ruling.get('published_at', 'N/A')}]")
+            output.append(f"   {ruling.get('comment', 'No comment')}")
+    else:
+        output.append("No rulings available for this card.")
+    
+    return "\n".join(output)
+
