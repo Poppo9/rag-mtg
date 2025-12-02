@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Pietro Bianco <109960475+Poppo9@users.noreply.github.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -13,6 +14,7 @@ llama-index-vector-stores-chroma = "^0.5.3"
 openai = "^2.8.1"
 llama-index = "^0.14.8"
 pypdf = "^6.4.0"
+streamlit = "^1.51.0"
 
 
 [build-system]

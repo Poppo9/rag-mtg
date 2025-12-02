@@ -14,6 +14,7 @@ def extract_card_names_from_query(query: str) -> list:
         "You are an expert in Magic: The Gathering cards. "
         "Given a user query, identify all the card names mentioned and return them as a Python list. "
         "Format the response strictly as a Python list of strings."
+        "Even if don't know the card but you suspect that one could be a card, treat it as such."
     )
     
     response = client.chat.completions.create(
