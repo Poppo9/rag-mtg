@@ -15,8 +15,7 @@ https://scryfall.com/docs/api
 
 # Main Architecture Idea & Guidelines
 1. Account Setup and Credentials
-- [X] Create an NVIDIA account
-- [X] Create an OpenAI account and deploy a model to get API key.
+- [X] Create an NVIDIA account and deploy a model to get API key.
 - [X] Store all API keys securely
 
 2. Data Preparation
@@ -25,7 +24,7 @@ https://scryfall.com/docs/api
 
 3. Indexing Pipeline (local ipynb script)
 - Splits text into chunks
-- Call OpenAI for embeddings (same model used for retrieval)
+- Call NVIDIA for embeddings (same model used for retrieval)
 - Uploads vectors to a chroma DB
 
 4. Local Development Environment Setup
@@ -41,4 +40,12 @@ https://docs.astral.sh/uv/getting-started/
 
 # Notes
 At first, I considered indexing the entire card database, but that would require a recurring script to keep the index updated. I’ll still need to do something similar for the rules manual, though rule changes occur far less frequently than new card releases.
-Maybe a chronjob on the VM that pulls weekly rule changes from the web. (TODO)
+
+# TODO
+- [ ] Maybe a chronjob on the VM that pulls weekly rule changes from the web. 
+- [ ] Switch OpenaAI to NVIDIA models in /functions/agents.py
+- [ ] Switch OpenaAI to NVIDIA models in /functions/chroma.py
+- [X] Switch OpenaAI to NVIDIA models in chroma-setup.ipynb
+- [X] Switch OpenaAI to NVIDIA models in chroma-test.ipynb
+- [ ] Switch OpenaAI to NVIDIA models in demo.ipynb
+- [ ] 
