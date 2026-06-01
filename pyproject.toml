@@ -1,22 +1,15 @@
-[tool.poetry]
+[project]
 name = "rag-mtg"
 version = "0.1.0"
-description = ""
-authors = ["Pietro Bianco <109960475+Poppo9@users.noreply.github.com>"]
+description = "Add your description here"
 readme = "README.md"
-package-mode = false
-
-[tool.poetry.dependencies]
-python = "^3.12"
-ipykernel = "^7.1.0"
-python-dotenv = "^1.2.1"
-llama-index-vector-stores-chroma = "^0.5.3"
-openai = "^2.8.1"
-llama-index = "^0.14.8"
-pypdf = "^6.4.0"
-streamlit = "^1.51.0"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires-python = ">=3.12"
+dependencies = [
+    "ipykernel>=7.1.0",
+    "python-dotenv>=1.2.1",
+    "llama-index-vector-stores-chroma>=0.5.3",
+    "openai>=2.8.1",
+    "llama-index>=0.14.8",
+    "pypdf>=6.4.0",
+    "streamlit>=1.51.0",
+]
