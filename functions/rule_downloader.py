@@ -1,22 +1,27 @@
 import re
 import urllib.request
+from pathlib import Path
 
-def download_rules(target_folder="documents"):
-    print("Scaricamento delle regole di Magic: The Gathering...")
+def download_rules():
+    target_folder = "documents"
+    if not Path(target_folder).exists():
+        Path(target_folder).mkdir(exist_ok=True)
 
-    # Scarica la pagina delle regole
+    print("Downloading Magic: The Gathering Comprehensive Rules...")
+
+    # Download the rules page
     html = urllib.request.urlopen("https://magic.wizards.com/en/rules").read().decode("utf-8")
     
-    # Trova il link al TXT
+    # Find the link to the TXT file
     url = re.search(r'https://media\.wizards\.com/\d+/downloads/MagicCompRules[\w% ]+\.txt', html).group(0)
     url = url.replace(" ", "%20")
 
-    print(f"URL trovato: {url}")
+    print(f"URL found: {url}")
 
-    # Scarica il file
+    # Download the file
     filename = url.split("/")[-1].replace("%20", "_")
     file_path = f"{target_folder}/{filename}"
     urllib.request.urlretrieve(url, file_path)
     
-    print(f"Scaricato: {filename}")
+    print(f"Downloaded: {filename}")
     return file_path
