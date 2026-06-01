@@ -9,12 +9,13 @@ https://scryfall.com/docs/api
 
 # Learning Topics
 - RAG logics implementation without using already developed libraries.
-- Lambda AWS. https://docs.aws.amazon.com/lambda/
+- NVIDIA free api testing
 - CHROMADB vector db + Llamaindex.
+- Easy streamlit frontend
 
 # Main Architecture Idea & Guidelines
 1. Account Setup and Credentials
-- [ ] Create an AWS account (requires a credit card)
+- [X] Create an NVIDIA account
 - [X] Create an OpenAI account and deploy a model to get API key.
 - [X] Store all API keys securely
 
@@ -24,41 +25,20 @@ https://scryfall.com/docs/api
 
 3. Indexing Pipeline (local ipynb script)
 - Splits text into chunks
-- Call OpenAI for embeddings
-- Uploads vectors to Pinecone
+- Call OpenAI for embeddings (same model used for retrieval)
+- Uploads vectors to a chroma DB
 
 4. Local Development Environment Setup
-- Install AWS CLI and configure credentials
-- Install AWS SAM CLI (to test Lambda locally)
-- Set up a Python virtual environment
+- Set up a Python virtual environment (here with UV to test it)
 
-5. Lambda RAG Engine Development
-- Create a Lambda function (Python)
-- Logic: receive query → generate API query → call scryfall → search Pinecone → generate answer with GPT
-- Test locally using SAM
-
-6. Lambda Deployment and API Gateway
-- Deploy Lambda to AWS
-- Create a REST API via API Gateway
-- Connect the endpoint to the Lambda function
-- Test using Postman or curl
-
-7. Streamlit Integration
-- Create a basic frontend in Streamlit
-- Activate Streamlit Community
-- Create a Lambda webhook handler
-- Configure webhook URL
-- Test conversation
-
+5. Setup a way to chat with it 
+- Discord bot is feasable with a cloud VM (Oracle Cloud offers low tier free VMs)
+- Quick and easy streamlit FE to run locally
 
 # Project Setup
-This project uses poetry to handle dependencies
-
-run:
-
-pip install poetry
-poetry install
-
+This project uses UV to handle dependencies
+https://docs.astral.sh/uv/getting-started/
 
 # Notes
 At first, I considered indexing the entire card database, but that would require a recurring script to keep the index updated. I’ll still need to do something similar for the rules manual, though rule changes occur far less frequently than new card releases.
+Maybe a chronjob on the VM that pulls weekly rule changes from the web. (TODO)
