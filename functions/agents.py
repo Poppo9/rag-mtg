@@ -8,7 +8,7 @@ from functions.chroma import query_chroma_index
 
 def extract_card_names_from_query(query: str) -> list:
     
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=os.environ["NVIDIA_API_KEY"])
     
     system_prompt = (
         "You are an expert in Magic: The Gathering cards. "
@@ -18,7 +18,7 @@ def extract_card_names_from_query(query: str) -> list:
     )
     
     response = client.chat.completions.create(
-        model="gpt-4o-mini-2024-07-18",
+        model="meta/llama-3.1-8b-instruct",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": query}
@@ -49,10 +49,10 @@ def magic_agent(user_query: str, verbose = False) -> str:
     constructs a comprehensive response using GPT.
     """
     if verbose:
-        print("\n\n=== STEP 1: Initializing OpenAI client ===")
+        print("\n\n=== STEP 1: Initializing NVIDIA client ===")
         print(f"Asking question: {user_query}")
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    
+    client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=os.environ["NVIDIA_API_KEY"])
+
     # 1. Define the system prompt
     system_prompt = (
         "You are an expert Magic: The Gathering assistant. "
@@ -130,7 +130,7 @@ def magic_agent(user_query: str, verbose = False) -> str:
         print("\n=== STEP 7: Calling GPT ===")
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini-2024-07-18",
+            model="meta/llama-3.1-8b-instruct",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": final_user_message}
@@ -157,7 +157,7 @@ def non_rag_magic_agent(user_query: str, verbose = False) -> str:
     constructs a comprehensive response using GPT.
     """
 
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+    client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=os.environ["NVIDIA_API_KEY"])
     
     # 1. Define the system prompt this is the same as in magic_agent
     system_prompt = (
@@ -170,7 +170,7 @@ def non_rag_magic_agent(user_query: str, verbose = False) -> str:
     # 2. Build the final prompt without all context
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini-2024-07-18",
+            model="meta/llama-3.1-8b-instruct",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_query}

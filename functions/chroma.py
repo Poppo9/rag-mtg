@@ -1,25 +1,30 @@
 import os
 from llama_index.core import VectorStoreIndex, StorageContext
 from llama_index.vector_stores.chroma import ChromaVectorStore
-from llama_index.embeddings.openai import OpenAIEmbedding
+from llama_index.embeddings.nvidia import NVIDIAEmbedding
+from llama_index.llms.nvidia import NVIDIA
 import chromadb
 from dotenv import load_dotenv
+from llama_index.core import Settings
 
 # Load environment variables from .env file
 load_dotenv()
-OPENAI_API_KEY = os.environ["OPENAI_API_KEY"]
+NVIDIA_API_KEY = os.environ["NVIDIA_API_KEY"]
 
 def query_chroma_index(question: str) -> str:
     # Reconnect to the existing persistent Chroma database
     chroma_client = chromadb.PersistentClient(path="./chroma_db")
     # Get the existing collection
-    chroma_collection = chroma_client.get_collection("pdf_collection")
+    chroma_collection = chroma_client.get_collection("documents_collection")
     # Wrap the collection in LlamaIndex's vector store adapter
     vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
     # Create storage context pointing to the existing vector store
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     # Initialize the same embedding model used when creating the index
-    embed_model = OpenAIEmbedding(model="text-embedding-3-small")
+    # LLM to generate answers based on retrieved information
+    Settings.llm = NVIDIA(model="meta/llama-3.1-8b-instruct", api_key=os.getenv("NVIDIA_API_KEY"))
+    # Embedding model to convert text into vectors for retrieval
+    embed_model = NVIDIAEmbedding(model="nvidia/nv-embed-v1", api_key=os.getenv("NVIDIA_API_KEY"))
     # Load the index from the existing vector store
     index = VectorStoreIndex.from_vector_store(vector_store=vector_store, embed_model=embed_model)
     # Query the index
