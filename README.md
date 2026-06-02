@@ -42,10 +42,10 @@ https://docs.astral.sh/uv/getting-started/
 At first, I considered indexing the entire card database, but that would require a recurring script to keep the index updated. I’ll still need to do something similar for the rules manual, though rule changes occur far less frequently than new card releases.
 
 # TODO
-- [ ] Maybe a chronjob on the VM that pulls weekly rule changes from the web. 
 - [X] Switch OpenaAI to NVIDIA models in /functions/agents.py
 - [X] Switch OpenaAI to NVIDIA models in /functions/chroma.py
 - [X] Switch OpenaAI to NVIDIA models in chroma-setup.ipynb
 - [X] Switch OpenaAI to NVIDIA models in chroma-test.ipynb
 - [X] Switch OpenaAI to NVIDIA models in demo.ipynb
-- [ ] Add endpoint in the chatbot to reindex the knowledgebase
+- [X] Add endpoint in the chatbot to index the knowledgebase from discord
+- [X] System prompt optimization and edge case handling

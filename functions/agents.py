@@ -5,16 +5,19 @@ from dotenv import load_dotenv
 load_dotenv()
 from functions.scryfall import get_complete_card_info
 from functions.chroma import query_chroma_index
+import ast 
 
 def extract_card_names_from_query(query: str) -> list:
-    
     client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=os.environ["NVIDIA_API_KEY"])
     
     system_prompt = (
-        "You are an expert in Magic: The Gathering cards. "
-        "Given a user query, identify all the card names mentioned and return them as a Python list. "
-        "Format the response strictly as a Python list of strings."
-        "Even if don't know the card but you suspect that one could be a card, treat it as such."
+        "You are an expert in Magic: The Gathering. Your single task is to identify and extract card names from the user query.\n"
+        "RULES:\n"
+        "1. Return strictly a valid Python list of strings, containing only the extracted card names.\n"
+        "2. Do NOT include any introductory or concluding text. No explanations.\n"
+        "3. If no cards are mentioned, return an empty list: []\n"
+        "4. If too many cards are mentioned, extract ONLY the most relevant ones (MAXIMUM 5 cards).\n"
+        "5. Even if you suspect a word might be a card name but are not 100% sure, include it."
     )
     
     response = client.chat.completions.create(
@@ -22,19 +25,20 @@ def extract_card_names_from_query(query: str) -> list:
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": query}
-        ]
+        ],
+        temperature=0.0 # Low temperature for deterministic output, since we want a strict list of card names
     )
     
-    content = response.choices[0].message.content
+    content = response.choices[0].message.content.strip()
     
-    # Use regex to extract the Python list from the response
+    # Use regex to extract the list from the response
     match = re.search(r'\[.*\]', content, re.DOTALL)
     if match:
         list_str = match.group(0)
         try:
-            card_names = eval(list_str)
+            card_names = ast.literal_eval(list_str)
             if isinstance(card_names, list):
-                return card_names
+                return card_names[:5] # Extract only the first 5 cards if there are more
         except Exception:
             pass
     
@@ -42,92 +46,73 @@ def extract_card_names_from_query(query: str) -> list:
 
 
 def magic_agent(user_query: str, verbose = False) -> str:
-    """
-    An agent that processes a user query about Magic: The Gathering cards.
-    It extracts card names, retrieves their details from Scryfall,
-    queries a ChromaDB collection for additional context, and then
-    constructs a comprehensive response using GPT.
-    """
     if verbose:
         print("\n\n=== STEP 1: Initializing NVIDIA client ===")
         print(f"Asking question: {user_query}")
     client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=os.environ["NVIDIA_API_KEY"])
 
-    # 1. Define the system prompt
+    # 1. System Prompt 
     system_prompt = (
-        "You are an expert Magic: The Gathering assistant. "
-        "You help players understand cards, strategies, and game mechanics. "
-        "Use the provided card details and context to give accurate and helpful answers. "
-        "If you're not sure about something, say so rather than making up information."
+        "You are an expert Magic: The Gathering assistant. You help players understand cards, strategies, rules, and game mechanics.\n\n"
+        "CRITICAL RULE - OFF-TOPIC FILTER:\n"
+        "If the user's question is completely unrelated to Magic: The Gathering (e.g., general knowledge, cooking, other games, coding, life advice), "
+        "you MUST refuse to answer. Respond in a brief, annoyed, sarcastic, or grumpy tone, stating clearly that the question has nothing to do with MTG, "
+        "and tell them to go bother another AI (like ChatGPT or Claude) for that kind of stuff. Do not be helpful for off-topic questions.\n\n"
+        "RULES FOR MTG QUESTIONS:\n"
+        "1. Use the provided card details and context to give accurate answers.\n"
+        "2. If multiple cards are provided, compare them or analyze their interaction as requested.\n"
+        "3. If the context states that a card was not found, inform the user about it.\n"
+        "4. If you're not sure about a ruling, state it honestly. Do not hallucinate."
     )
     
-    # 2. Extract card names from the user query
-    if verbose:
-        print("\n\n=== STEP 2: Extracting card names ===")
+    # 2. Extract card names
     card_names = extract_card_names_from_query(user_query)
     if verbose:
         print(f"Extracted card names: {card_names}")
 
-    # 3. Retrieve complete card info (including rulings) for each card
-    if verbose:
-        print("\n\n=== STEP 3: Retrieving card info from Scryfall ===")
+    # 3. Retrieve card info
     card_info_strings = []
+    missing_cards = []
+    
     for card_name in card_names:
         try:
             card_info = get_complete_card_info(card_name)
             if card_info and not card_info.startswith("No card found") and not card_info.startswith("Error"):
                 card_info_strings.append(card_info)
-                if verbose:
-                    print(f"✓ Retrieved info for: {card_name}")
             else:
-                if verbose:
-                    print(f"✗ Could not retrieve info for: {card_name}")
+                missing_cards.append(card_name)
         except Exception as e:
+            missing_cards.append(card_name)
             if verbose:
                 print(f"✗ Error retrieving info on {card_name}: {e}")
-    if verbose:
-        print(f"Total cards retrieved: {len(card_info_strings)}/{len(card_names)}")
 
-    # 4. Query ChromaDB for additional context
-    if verbose:
-        print("\n\n=== STEP 4: Querying ChromaDB ===")
+    # 4. Query ChromaDB
     chroma_results = query_chroma_index(user_query)
-    if verbose:
-        print("ChromaDB query completed.")
-        print(f"ChromaDB results type: {type(chroma_results)}")
     
-        # 5. Build the context for the final prompt
-        print("\n\n=== STEP 5: Building context ===")
+    # 5. Build context
     context_parts = []
     
-    # Add complete card details (already formatted by get_complete_card_info)
     if card_info_strings:
         context_parts.append("=== CARD DETAILS WITH RULINGS ===\n")
         context_parts.extend(card_info_strings)
-        if verbose:
-            print(f"Added {len(card_info_strings)} card details to context")
     
-    # Add results from ChromaDB (ora è una stringa formattata)
+    # Signal the LLM if Scryfall didn't find some cards requested by the user
+    if missing_cards:
+        context_parts.append(f"=== MISSING CARDS ===\nNote: The following cards requested by the user could not be found in the database: {', '.join(missing_cards)}")
+        
     if chroma_results:
-        context_parts.append(chroma_results)
-        if verbose:
-            print("Added ChromaDB results to context")
-    else:
-        if verbose:
-            print("No ChromaDB results to add")
+        context_parts.append("=== ADDITIONAL CONTEXT ===\n" + chroma_results)
     
     context = "\n".join(context_parts)
 
-    # 6. Build the final prompt with all context
-    if verbose:
-        print("=== STEP 6: Building final prompt ===")
-    final_user_message = f"{context}\n\n=== USER QUESTION ===\n{user_query}"
-    if verbose:
-        print(f"Final prompt length: {len(final_user_message)} characters")
-        print(f"Final prompt preview:\n--- START OF PROMPT ---\n{final_user_message}\n\n--- END OF PROMPT ---\n")
+    # 6. Build final prompt
+    # If the context is empty (e.g., a generic question), pass only the question.
+    if context:
+        final_user_message = f"{context}\n\n=== USER QUESTION ===\n{user_query}"
+    else:
+        final_user_message = f"=== USER QUESTION ===\n{user_query}"
 
-        # 7. Call GPT with all context
-        print("\n=== STEP 7: Calling GPT ===")
+    # 7. Call GPT
     try:
         response = client.chat.completions.create(
             model="meta/llama-3.1-8b-instruct",
@@ -137,37 +122,23 @@ def magic_agent(user_query: str, verbose = False) -> str:
             ],
             temperature=0.7
         )
-        if verbose:
-            print("✓ GPT response received successfully")
-            print(f"Response length: {len(response.choices[0].message.content)} characters")
-        
         return response.choices[0].message.content
         
     except Exception as e:
-        if verbose:
-            print(f"✗ Error calling GPT: {e}")
         return f"Error generating response: {str(e)}"
 
 
 def non_rag_magic_agent(user_query: str, verbose = False) -> str:
-    """
-    An agent that processes a user query about Magic: The Gathering cards.
-    It extracts card names, retrieves their details from Scryfall,
-    queries a ChromaDB collection for additional context, and then
-    constructs a comprehensive response using GPT.
-    """
-
     client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=os.environ["NVIDIA_API_KEY"])
     
-    # 1. Define the system prompt this is the same as in magic_agent
     system_prompt = (
-        "You are an expert Magic: The Gathering assistant. "
-        "You help players understand cards, strategies, and game mechanics. "
-        "Use the provided card details and context to give accurate and helpful answers. "
-        "If you're not sure about something, say so rather than making up information."
+        "You are an expert Magic: The Gathering assistant. You help players understand cards, strategies, and game mechanics.\n\n"
+        "CRITICAL RULE - OFF-TOPIC FILTER:\n"
+        "If the user's question is completely unrelated to Magic: The Gathering, you MUST refuse to answer. "
+        "Respond in a brief, annoyed, sarcastic, or grumpy tone, stating clearly that the question has nothing to do with MTG, "
+        "and tell them to go ask another AI for that stuff. Do not help them with non-MTG topics."
     )
     
-    # 2. Build the final prompt without all context
     try:
         response = client.chat.completions.create(
             model="meta/llama-3.1-8b-instruct",
@@ -177,9 +148,6 @@ def non_rag_magic_agent(user_query: str, verbose = False) -> str:
             ],
             temperature=0.7
         )
-        
         return response.choices[0].message.content
-        
     except Exception as e:
-        print(f"✗ Error calling GPT: {e}")
         return f"Error generating response: {str(e)}"
