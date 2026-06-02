@@ -14,4 +14,5 @@ dependencies = [
     "protobuf<=3.20.3",
     "llama-index-embeddings-nvidia>=0.5.1",
     "llama-index-llms-nvidia>=0.5.0",
+    "discord-py>=2.7.1",
 ]
