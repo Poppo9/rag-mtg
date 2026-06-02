@@ -43,9 +43,9 @@ At first, I considered indexing the entire card database, but that would require
 
 # TODO
 - [ ] Maybe a chronjob on the VM that pulls weekly rule changes from the web. 
-- [ ] Switch OpenaAI to NVIDIA models in /functions/agents.py
-- [ ] Switch OpenaAI to NVIDIA models in /functions/chroma.py
+- [X] Switch OpenaAI to NVIDIA models in /functions/agents.py
+- [X] Switch OpenaAI to NVIDIA models in /functions/chroma.py
 - [X] Switch OpenaAI to NVIDIA models in chroma-setup.ipynb
 - [X] Switch OpenaAI to NVIDIA models in chroma-test.ipynb
-- [ ] Switch OpenaAI to NVIDIA models in demo.ipynb
-- [ ] 
+- [X] Switch OpenaAI to NVIDIA models in demo.ipynb
+- [ ] Add endpoint in the chatbot to reindex the knowledgebase
