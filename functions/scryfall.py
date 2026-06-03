@@ -15,10 +15,10 @@ def find_exact_name(input_name: str) -> str:
     match = get_close_matches(input_name, card_names, n=1, cutoff=0.6)
 
     if match:
-        print(match)
+        print(f"{match[0]} is the closest match to '{input_name}'")
         return match[0]  # Standardized name (Oracle)
     else:
-        print("no match")
+        print(f"No match found for '{input_name}'")
         return None  # No match found
     
 

@@ -20,8 +20,10 @@ from functions.rule_downloader import download_rules
 # Load environment variables from .env file
 load_dotenv(override=True)
 NVIDIA_API_KEY = os.environ["NVIDIA_API_KEY"]
+MODEL_NAME = os.environ["MODEL_NAME"]
 
 def query_chroma_index(question: str) -> str:
+    print("Run function: query_chroma_index")
     # Reconnect to the existing persistent Chroma database
     chroma_client = chromadb.PersistentClient(path="./chroma_db")
     # Get the existing collection
@@ -32,10 +34,12 @@ def query_chroma_index(question: str) -> str:
     storage_context = StorageContext.from_defaults(vector_store=vector_store)
     # Initialize the same embedding model used when creating the index
     # LLM to generate answers based on retrieved information
-    Settings.llm = NVIDIA(model="meta/llama-3.1-8b-instruct", api_key=os.getenv("NVIDIA_API_KEY"))
+    print("Initializing LLM...")
+    Settings.llm = NVIDIA(model=MODEL_NAME, api_key=NVIDIA_API_KEY)
     # Embedding model to convert text into vectors for retrieval
-    embed_model = NVIDIAEmbedding(model="nvidia/nv-embed-v1", api_key=os.getenv("NVIDIA_API_KEY"))
+    embed_model = NVIDIAEmbedding(model="nvidia/nv-embed-v1", api_key=NVIDIA_API_KEY)
     # Load the index from the existing vector store
+    print("Loading index...")
     index = VectorStoreIndex.from_vector_store(vector_store=vector_store, embed_model=embed_model)
     # Query the index
     query_engine = index.as_query_engine(similarity_top_k=5)
@@ -77,12 +81,7 @@ def setup_chroma_index(
             "documents": list[Document],
         }
     """
-
-    # Load environment variables
-    load_dotenv()
-
-    nvidia_api_key = os.environ["NVIDIA_API_KEY"]
-
+    print("Run function: setup_chroma_index")
     # Download latest rules
     if download_rules():
         print("Regole scaricate con successo.")
@@ -115,7 +114,7 @@ def setup_chroma_index(
     # Embedding model
     embed_model = NVIDIAEmbedding(
         model="nvidia/nv-embed-v1",
-        api_key=nvidia_api_key,
+        api_key=NVIDIA_API_KEY,
     )
 
     # Build index

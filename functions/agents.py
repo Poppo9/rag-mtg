@@ -7,7 +7,10 @@ from functions.scryfall import get_complete_card_info
 from functions.chroma import query_chroma_index
 import ast 
 
+MODEL_NAME = os.environ["MODEL_NAME"]
+
 def extract_card_names_from_query(query: str) -> list:
+    print("Run function: extract_card_names_from_query")
     client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=os.environ["NVIDIA_API_KEY"])
     
     system_prompt = (
@@ -21,7 +24,7 @@ def extract_card_names_from_query(query: str) -> list:
     )
     
     response = client.chat.completions.create(
-        model="meta/llama-3.1-8b-instruct",
+        model=MODEL_NAME,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": query}
@@ -46,6 +49,7 @@ def extract_card_names_from_query(query: str) -> list:
 
 
 def magic_agent(user_query: str, verbose = False) -> str:
+    print("Run function: magic_agent")
     if verbose:
         print("\n\n=== STEP 1: Initializing NVIDIA client ===")
         print(f"Asking question: {user_query}")
@@ -62,7 +66,30 @@ def magic_agent(user_query: str, verbose = False) -> str:
         "1. Use the provided card details and context to give accurate answers.\n"
         "2. If multiple cards are provided, compare them or analyze their interaction as requested.\n"
         "3. If the context states that a card was not found, inform the user about it.\n"
-        "4. If you're not sure about a ruling, state it honestly. Do not hallucinate."
+        "4. If you're not sure about a ruling, state it honestly. Do not hallucinate.\n"
+        "5. RULES INTERACTION PARADIGM — when cards interact via continuous effects:\n"
+        "   a. LAYER: identify which layer each effect applies in (rule 613.1).\n"
+        "   b. TIMESTAMP: within the same layer, effects apply in timestamp order (613.7).\n"
+        "   c. DEPENDENCY: before using timestamp, check rule 613.8a — if applying effect A\n"
+        "      changes what effect B does or what it applies to, B depends on A and A applies\n"
+        "      first, regardless of timestamp.\n"
+        "   d. CDA: characteristic-defining abilities always apply before other effects in the\n"
+        "      same layer (613.3).\n"
+        "   e. STATE THE CONCLUSION: what are the final characteristics after all layers resolve?\n"
+        "   Cite the rule number when context includes it. Flag uncertainty explicitly.\n\n"
+        "LANGUAGE:\n"
+        "Detect the language of the user's question and reply in the same language.\n"
+        "If the question is in Italian, answer in Italian. If in English, answer in English.\n"
+        "Do not mix languages within a single response.\n\n"
+        "RESPONSE FORMAT:\n"
+        "Structure every answer using the following sections (omit sections that don't apply):\n\n"
+        "**Cards involved** — list each card with a one-line summary of its relevant effect.\n\n"
+        "**Answer** — direct answer to the question, written in plain prose.\n\n"
+        "**Rules explanation** — step-by-step reasoning. For interactions, apply the RULES\n"
+        "INTERACTION PARADIGM (point 5 above). Cite rule numbers when available.\n\n"
+        "**Verdict** — one or two sentences summarising the final outcome clearly.\n\n"
+        "**Uncertainty** — if any part of the ruling is unclear or disputed, flag it here.\n"
+        "Omit this section if you are fully confident in the answer.\n"
     )
     
     # 2. Extract card names
@@ -77,6 +104,7 @@ def magic_agent(user_query: str, verbose = False) -> str:
     for card_name in card_names:
         try:
             card_info = get_complete_card_info(card_name)
+            print(f"Retrieved info for \"{card_name}\": {card_info.splitlines()[0]}")
             if card_info and not card_info.startswith("No card found") and not card_info.startswith("Error"):
                 card_info_strings.append(card_info)
             else:
@@ -112,10 +140,12 @@ def magic_agent(user_query: str, verbose = False) -> str:
     else:
         final_user_message = f"=== USER QUESTION ===\n{user_query}"
 
+    print("\n\n\nCalling GPT with the following prompt:\n\n\n")
+    print(final_user_message)
     # 7. Call GPT
     try:
         response = client.chat.completions.create(
-            model="meta/llama-3.1-8b-instruct",
+            model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": final_user_message}
@@ -141,7 +171,7 @@ def non_rag_magic_agent(user_query: str, verbose = False) -> str:
     
     try:
         response = client.chat.completions.create(
-            model="meta/llama-3.1-8b-instruct",
+            model=MODEL_NAME,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_query}
