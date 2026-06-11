@@ -4,26 +4,27 @@ AI chatbot that knows the rules of Magic the Gathering.
 # Starting Documents
 MTG full rulebook.
 https://media.wizards.com/images/magic/tcg/resources/rules/MagicCompRules_21031101.pdf
-Full db of mtg cards from scryfall called via API.
+Initially full db of mtg cards from scryfall called via API, then just single cards queries.
 https://scryfall.com/docs/api
 
 # Learning Topics
 - RAG logics implementation without using already developed libraries.
 - NVIDIA free api testing
-- CHROMADB vector db + Llamaindex.
-- Easy streamlit frontend
+- CHROMADB vector db + Llamaindex. (probably not the right usecase for RAG)
+- Easy discord bot.
 
 # Main Architecture Idea & Guidelines
 1. Account Setup and Credentials
 - [X] Create an NVIDIA account and deploy a model to get API key.
-- [X] Store all API keys securely
+- [X] Setup Discord for developers to deploy the bot.
+- [X] Store all API keys securely.
 
 2. Data Preparation
 - Download the Magic: The Gathering rules manual (PDF or text)
 - Test scryfall API
 
-3. Indexing Pipeline (local ipynb script)
-- Splits text into chunks
+3. Indexing Pipeline (local ipynb script) [deprecated]
+- Splits text into chunks 
 - Call NVIDIA for embeddings (same model used for retrieval)
 - Uploads vectors to a chroma DB
 
@@ -32,7 +33,7 @@ https://scryfall.com/docs/api
 
 5. Setup a way to chat with it 
 - Discord bot is feasable with a cloud VM (Oracle Cloud offers low tier free VMs)
-- Quick and easy streamlit FE to run locally
+- Quick and easy streamlit FE to run locally (TODO)
 
 # Project Setup
 This project uses UV to handle dependencies
@@ -50,5 +51,6 @@ For this usecase probably the RAG paradigm is not the right approach, need to do
 - [X] Switch OpenaAI to NVIDIA models in demo.ipynb
 - [X] Add endpoint in the chatbot to index the knowledgebase from discord
 - [X] System prompt optimization and edge case handling
-- [ ] Test a non RAG approach
+- [ ] Test a non RAG approach with mistral-medium-3.5-128b
+- [ ] Test a non RAG approach with llama-3.1-70b-instruct
 - [ ] Try to implement a google search to fact check answers
