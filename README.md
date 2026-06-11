@@ -40,6 +40,7 @@ https://docs.astral.sh/uv/getting-started/
 
 # Notes
 At first, I considered indexing the entire card database, but that would require a recurring script to keep the index updated. I’ll still need to do something similar for the rules manual, though rule changes occur far less frequently than new card releases.
+For this usecase probably the RAG paradigm is not the right approach, need to do more testing on full rules context + google scrape for answers.
 
 # TODO
 - [X] Switch OpenaAI to NVIDIA models in /functions/agents.py
@@ -49,3 +50,5 @@ At first, I considered indexing the entire card database, but that would require
 - [X] Switch OpenaAI to NVIDIA models in demo.ipynb
 - [X] Add endpoint in the chatbot to index the knowledgebase from discord
 - [X] System prompt optimization and edge case handling
+- [ ] Test a non RAG approach
+- [ ] Try to implement a google search to fact check answers
